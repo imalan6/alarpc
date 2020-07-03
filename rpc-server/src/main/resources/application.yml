@@ -1,0 +1,16 @@
+server:
+  port: 6969
+  servlet:
+    context-path: /rpc-server
+
+spring:
+  application:
+    name: rpc-server
+
+logging:
+  level:
+    root: info
+
+alan6-rpc:
+  registry:
+    ip: 192.168.33.133

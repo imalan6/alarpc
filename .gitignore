@@ -1,0 +1,49 @@
+#java
+*.class
+
+#package file
+*.war
+*.jar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+#maven ignore
+target/
+/target/
+build/
+
+# generated files
+/bin/
+/gen/
+
+#eclipse ignore
+*.settings/
+*.project
+*.classpath
+
+#Intellij idea
+.idea/
+/idea/
+*.ipr
+*.iml
+*.iws
+
+# temp file
+*.log
+*.cache
+*.diff
+*.patch
+*.tmp
+
+# built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# system ignore
+*.DS_Store
+Thumbs.db
