@@ -1,7 +1,6 @@
 package com.alan6.rpc.registry;
 
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.ZooKeeper;
 
 import java.util.List;
 
@@ -10,7 +9,7 @@ import java.util.List;
  * @Description：
  * @date： 2020/6/22 17:15
  */
-public interface ServiceDiscovery {
+public interface ServiceDiscovery extends BaseConnectManager {
 
     /**
      * @Description: 服务发现
@@ -18,4 +17,6 @@ public interface ServiceDiscovery {
      * @Return: 服务地址
      */
     public List<String> discover(String serviceName) throws KeeperException, InterruptedException;
+
+    public void watchNode(String path);
 }

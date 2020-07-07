@@ -1,6 +1,5 @@
 package com.alan6.rpc.server.starter;
 
-import com.alan6.rpc.registry.ServiceRegistry;
 import com.alan6.rpc.server.annotation.RpcServiceAop;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -31,9 +30,6 @@ public class RpcServerStarter {
 
     @Autowired
     private ServerChannelInitializer serverChannelInitializer;
-
-    @Autowired
-    private ServiceRegistry serviceRegistry;
 
     @Autowired
     private RpcServiceAop serviceParse;

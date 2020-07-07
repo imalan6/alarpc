@@ -7,8 +7,4 @@ spring:
 
 logging:
   level:
-    root: debug
-
-alan6-rpc:
-  registry:
-    ip: 192.168.33.133
+    root: info

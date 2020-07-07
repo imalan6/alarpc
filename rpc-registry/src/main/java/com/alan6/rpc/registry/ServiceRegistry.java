@@ -7,7 +7,7 @@ import org.apache.zookeeper.KeeperException;
  * @Description：
  * @date： 2020/6/22 17:30
  */
-public interface ServiceRegistry {
+public interface ServiceRegistry extends BaseConnectManager {
     /**
      * 注册服务
      *

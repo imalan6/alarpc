@@ -11,7 +11,7 @@ public interface ConnectManager {
 
     public ZooKeeper connectServer(String ip, int timeout);
 
-    public void watchNode(final ZooKeeper zk, String path);
+    public void watchNode(String path);
 
     public void stop();
 }

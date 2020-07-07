@@ -8,7 +8,6 @@ import com.alan6.rpc.server.annotation.RpcService;
  * @date: 2020/7/3 15:30
  */
 
-@RpcService("user")
 public interface User {
     public String getUserName(long id);
 }

@@ -8,6 +8,5 @@ import com.alan6.rpc.server.annotation.RpcService;
  * @date: 2020/7/3 15:32
  */
 
-@RpcService("goods")
 public interface Goods {
 }
