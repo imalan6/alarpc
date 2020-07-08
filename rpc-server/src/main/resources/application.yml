@@ -6,11 +6,16 @@ server:
 spring:
   application:
     name: rpc-server
+  aop:
+    proxy-target-class: true
 
 logging:
   level:
-    root: info
+    root: debug
 
-alan6-rpc:
+alarpc:
   registry:
-    ip: 192.168.0.6
+    ip: 192.168.33.133
+  threadpool:
+    coreSize: 10
+    maxSize: 60

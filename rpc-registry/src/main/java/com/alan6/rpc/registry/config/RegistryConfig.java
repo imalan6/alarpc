@@ -2,6 +2,7 @@ package com.alan6.rpc.registry.config;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,39 +12,39 @@ import org.springframework.context.annotation.Configuration;
  * @date: 2020/6/22 17:33
  */
 
-@Configuration
+@ConfigurationProperties(prefix = "alarpc.registry")
 @Data
 public class RegistryConfig {
 
-    @Value("${alan6-rpc.registry.ip}")
-    private String ZK_REGISTRY_IP;
+    @Value("${ip}")
+    private String registryIp;
 
-    @Value("${alan6-rpc.registry.session-timeout:5000}")
-    private int ZK_REGISTRY_SESSION_TIMEOUT;
+    @Value("${session-timeout:5000}")
+    private int sessionTimeOut;
 
-    @Value("${alan6-rpc.registry.connect-timeout:1000}")
-    private int ZK_REGISTRY_CONN_TIMEOUT;
+    @Value("${connect-timeout:1000}")
+    private int connTimeOut;
 
-    @Value("${alan6-rpc.registry.path:/registry}")
-    private String ZK_REGISTRY_PATH;
+    @Value("${registryPath:/registry}")
+    private String registryPath;
 
-    @Bean("ZK_REGISTRY_IP")
+    @Bean("registryIp")
     public String registryIp(){
-        return ZK_REGISTRY_IP;
+        return registryIp;
     }
 
-    @Bean("ZK_REGISTRY_SESSION_TIMEOUT")
-    public int sessionTimeout(){
-        return ZK_REGISTRY_SESSION_TIMEOUT;
+    @Bean("sessionTimeOut")
+    public int sessionTimeOut(){
+        return sessionTimeOut;
     }
 
-    @Bean("ZK_REGISTRY_CONN_TIMEOUT")
-    public int connectTimeout(){
-        return ZK_REGISTRY_CONN_TIMEOUT;
+    @Bean("connTimeOut")
+    public int connTimeOut(){
+        return connTimeOut;
     }
 
-    @Bean("ZK_REGISTRY_PATH")
-    public String zkRegistryPath(){
-        return ZK_REGISTRY_PATH;
+    @Bean("registryPath")
+    public String registryPath(){
+        return registryPath;
     }
 }

@@ -1,6 +1,5 @@
 package com.alan6.rpc.registry.zookeeper;
 
-import com.alan6.rpc.registry.Constant;
 import com.alan6.rpc.registry.ServiceDiscovery;
 import com.alan6.rpc.registry.ServiceRegistry;
 import com.alan6.rpc.registry.config.RegistryConfig;
@@ -19,96 +18,102 @@ import java.util.concurrent.CountDownLatch;
  * @Description:
  * @date: 2020/6/24 10:06
  */
-@Component
 @Slf4j
+@Component("zkConnectManager")
 public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
 
     @Autowired
-    private RegistryConfig config;
+    private String registryIp;
 
     @Autowired
-    private String ZK_REGISTRY_IP;
+    private int connTimeOut;
 
     @Autowired
-    private int ZK_REGISTRY_CONN_TIMEOUT;
-
-    @Autowired
-    private String ZK_REGISTRY_PATH;
-
-    private ZkServiceRegister serviceRegister;
+    private String registryPath;
 
     private static ZooKeeper zookeeper;
 
+    @Override
+    public void connectRegistry(Watcher watcher){
+        if (registryIp == null){
+            log.error("Please config registry server ip!!!");
+            return;
+        }
 
-    public static void connectServer(String ip, int timeout) {
-        CountDownLatch latch = new CountDownLatch(1);
-        try {
-            zookeeper = new ZooKeeper(ip, timeout, new Watcher() {
-                @Override
-                public void process(WatchedEvent event) {
-                    if (event.getState() == Event.KeeperState.SyncConnected) {
-                        latch.countDown();
-                    }
-                }
-            });
-            latch.await();
-            log.info("connected zookeeper server");
-        } catch (IOException | InterruptedException e) {
-            log.error("connect zookeeper server error {}", e);
+        if (zookeeper == null){
+            zookeeper = this.connectServer(registryIp, connTimeOut, watcher);
         }
     }
 
-    public void watchNode(final ZooKeeper zk, String path) {
+    public ZooKeeper connectServer(String ip, int timeout, Watcher watcher) {
+        ZooKeeper zk = null;
         try {
-            List<String> dataList = zk.getChildren(path, new Watcher() {
-                @Override
-                public void process(WatchedEvent event) {
-                    if (event.getType() == Event.EventType.NodeChildrenChanged) {
-                        watchNode(zk, path);
-                    }
-                }
-            });
-
-            // registry目录
-            if (path.equals(Constant.ZK_REGISTRY_PATH)) {
-                for (String serviceName : dataList) {
-                    String servicePath = Constant.ZK_REGISTRY_PATH + "/" + serviceName;
-                    // 服务递归watch
-                    watchNode(zk, servicePath);
-                }
-                log.debug("services:{}", dataList);
-            } else { // 服务目录
-                log.debug("service:{}, addresses: {}", path, dataList);
-            }
-        } catch (KeeperException | InterruptedException e) {
-            log.error("", e);
+            zk = new ZooKeeper(ip, timeout, watcher);
+        } catch (Exception e) {
+            log.error("Connect zookeeper server error {}", e);
         }
+        return zk;
+    }
+
+    @Override
+    public void watchNode(String path) {
+        if (zookeeper != null){
+            try {
+                List<String> dataList = zookeeper.getChildren(path, new Watcher() {
+                    @Override
+                    public void process(WatchedEvent event) {
+                        if (event.getType() == Event.EventType.NodeChildrenChanged) {
+                            watchNode(path);
+                        }
+                    }
+                });
+
+                // registry目录
+                if (path.equals(registryPath)) {
+                    for (String serviceName : dataList) {
+                        String servicePath = registryPath + "/" + serviceName;
+                        // 服务递归watch
+                        watchNode(servicePath);
+                    }
+                    log.debug("services:{}", dataList);
+                } else { // 服务目录
+                    log.debug("service:{}, addresses: {}", path, dataList);
+                }
+            } catch (KeeperException | InterruptedException e) {
+                log.error("", e);
+            }
+        }
+
     }
 
     @Override
     public void register(String serviceName, String serviceAddress) throws KeeperException, InterruptedException {
-        if (zookeeper != null) {
+        if (zookeeper != null){
             // 创建 registry 节点（持久）
-            if (zookeeper.exists(ZK_REGISTRY_PATH, false) == null) {
-                zookeeper.create(ZK_REGISTRY_PATH, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                log.debug("create registry node: {}", ZK_REGISTRY_PATH);
+            if (zookeeper.exists(registryPath, false) == null) {
+                zookeeper.create(registryPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                log.debug("Create registry node: {}", registryPath);
+            }else {
+                log.info("Found registry node: {}", registryPath);
             }
 
             // 创建 service 节点（持久）
-            String servicePath = ZK_REGISTRY_PATH + "/" + serviceName;
+            String servicePath = registryPath + "/" + serviceName;
             if (zookeeper.exists(servicePath, false) == null) {
                 zookeeper.create(servicePath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                log.debug("create service node: {}", servicePath);
+                log.debug("Create service node: {}", servicePath);
+            }else {
+                log.info("Found service node: {}", servicePath);
             }
 
             // 创建 address 节点（临时）
             String addressPath = servicePath + "/" + serviceAddress;
             if (zookeeper.exists(addressPath, false) == null) {
                 zookeeper.create(addressPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
-                log.debug("create address node: {}", servicePath);
+                log.debug("Create address node: {}", addressPath);
+            }else {
+                log.info("Found address node: {}", addressPath);
             }
-
-            log.debug("serviceAddress has been registered: {}", addressPath);
         }
     }
 
@@ -117,11 +122,11 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
         List<String> addressList = null;
 
         if (zookeeper != null) {
-            String servicePath = ZK_REGISTRY_PATH + "/" + serviceName;
+            String servicePath = registryPath + "/" + serviceName;
 
             Stat exist = zookeeper.exists(servicePath, false);
             if (exist == null) {
-                log.error("no service:【{}】 found!", serviceName);
+                log.error("Cannot find rpc service:【{}】 ", serviceName);
                 return null;
             }
 
@@ -136,7 +141,7 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
             try {
                 zookeeper.close();
             } catch (InterruptedException e) {
-                log.error("close zookeeper client error {}", e);
+                log.error("Close zookeeper client error {}", e);
             }
         }
     }

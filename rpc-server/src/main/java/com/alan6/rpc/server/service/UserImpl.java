@@ -6,14 +6,15 @@ import org.springframework.stereotype.Service;
 /**
  * @author: Alan6
  * @Description:
- * @date: 2020/7/3 17:24
+ * @date: 2020/7/7 17:52
  */
 
 @Service
 @RpcService("user")
-public class TestUser implements User {
+public class UserImpl implements User {
+
     @Override
     public String getUserName(long id) {
-        return "zhangsan";
+        return "zhangsan" + id;
     }
 }
