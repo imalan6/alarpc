@@ -1,8 +1,7 @@
 package com.alan6.rpc.server.annotation;
 
 import com.alan6.rpc.common.util.StringUtil;
-import com.alan6.rpc.registry.ServiceRegistry;
-import com.alan6.rpc.server.annotation.RpcService;
+import com.alan6.rpc.registry.zookeeper.ZkConnectManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.zookeeper.KeeperException;
@@ -27,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RpcServiceAop implements ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired
-    private ServiceRegistry serviceRegistry;
+    private ZkConnectManager connectManager;
 
     @Autowired
     private InetSocketAddress inetSocketAddress;
@@ -46,15 +45,17 @@ public class RpcServiceAop implements ApplicationListener<ContextRefreshedEvent>
                 if (StringUtil.isNotEmpty(serviceVersion)) {
                     serviceName += "-" + serviceVersion;
                 }
+                log.info("rpc service loaded:【{}】", serviceName);
                 serviceBeanMap.put(serviceName, serviceBean);
             }
         }
 
         // 注册 RPC 服务地址
-        if (serviceRegistry != null) {
+        if (connectManager != null) {
+            ZkConnectManager.connectServer("192.168.0.6", 5000);
             for (String interfaceName : serviceBeanMap.keySet()) {
                 try {
-                    serviceRegistry.register(interfaceName, inetSocketAddress.getAddress().getHostAddress());
+                    connectManager.register(interfaceName, inetSocketAddress.getAddress().getHostAddress());
                 } catch (KeeperException | InterruptedException e) {
                     e.printStackTrace();
                 }

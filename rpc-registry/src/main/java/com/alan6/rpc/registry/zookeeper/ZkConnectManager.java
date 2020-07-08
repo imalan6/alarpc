@@ -1,6 +1,5 @@
 package com.alan6.rpc.registry.zookeeper;
 
-import com.alan6.rpc.registry.ConnectManager;
 import com.alan6.rpc.registry.Constant;
 import com.alan6.rpc.registry.ServiceDiscovery;
 import com.alan6.rpc.registry.ServiceRegistry;
@@ -22,7 +21,7 @@ import java.util.concurrent.CountDownLatch;
  */
 @Component
 @Slf4j
-public class ZkConnectManager implements ConnectManager, ServiceRegistry, ServiceDiscovery {
+public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
 
     @Autowired
     private RegistryConfig config;
@@ -38,21 +37,13 @@ public class ZkConnectManager implements ConnectManager, ServiceRegistry, Servic
 
     private ZkServiceRegister serviceRegister;
 
-    private ZooKeeper zookeeper;
+    private static ZooKeeper zookeeper;
 
-    public ZooKeeper getZookeeper() {
-        if (zookeeper == null) {
-            zookeeper = connectServer(ZK_REGISTRY_IP, ZK_REGISTRY_CONN_TIMEOUT);
-        }
-        return zookeeper;
-    }
 
-    @Override
-    public ZooKeeper connectServer(String ip, int timeout) {
+    public static void connectServer(String ip, int timeout) {
         CountDownLatch latch = new CountDownLatch(1);
-        ZooKeeper zk = null;
         try {
-            zk = new ZooKeeper(ip, timeout, new Watcher() {
+            zookeeper = new ZooKeeper(ip, timeout, new Watcher() {
                 @Override
                 public void process(WatchedEvent event) {
                     if (event.getState() == Event.KeeperState.SyncConnected) {
@@ -65,10 +56,8 @@ public class ZkConnectManager implements ConnectManager, ServiceRegistry, Servic
         } catch (IOException | InterruptedException e) {
             log.error("connect zookeeper server error {}", e);
         }
-        return zk;
     }
 
-    @Override
     public void watchNode(final ZooKeeper zk, String path) {
         try {
             List<String> dataList = zk.getChildren(path, new Watcher() {
@@ -98,27 +87,29 @@ public class ZkConnectManager implements ConnectManager, ServiceRegistry, Servic
 
     @Override
     public void register(String serviceName, String serviceAddress) throws KeeperException, InterruptedException {
-        // 创建 registry 节点（持久）
-        if (zookeeper.exists(ZK_REGISTRY_PATH, false) == null) {
-            zookeeper.create(ZK_REGISTRY_PATH, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            log.debug("create registry node: {}", ZK_REGISTRY_PATH);
-        }
+        if (zookeeper != null) {
+            // 创建 registry 节点（持久）
+            if (zookeeper.exists(ZK_REGISTRY_PATH, false) == null) {
+                zookeeper.create(ZK_REGISTRY_PATH, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                log.debug("create registry node: {}", ZK_REGISTRY_PATH);
+            }
 
-        // 创建 service 节点（持久）
-        String servicePath = ZK_REGISTRY_PATH + "/" + serviceName;
-        if (zookeeper.exists(servicePath, false) == null) {
-            zookeeper.create(servicePath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            log.debug("create service node: {}", servicePath);
-        }
+            // 创建 service 节点（持久）
+            String servicePath = ZK_REGISTRY_PATH + "/" + serviceName;
+            if (zookeeper.exists(servicePath, false) == null) {
+                zookeeper.create(servicePath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                log.debug("create service node: {}", servicePath);
+            }
 
-        // 创建 address 节点（临时）
-        String addressPath = servicePath + "/" + serviceAddress;
-        if (zookeeper.exists(addressPath, false) == null) {
-            zookeeper.create(addressPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
-            log.debug("create address node: {}", servicePath);
-        }
+            // 创建 address 节点（临时）
+            String addressPath = servicePath + "/" + serviceAddress;
+            if (zookeeper.exists(addressPath, false) == null) {
+                zookeeper.create(addressPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+                log.debug("create address node: {}", servicePath);
+            }
 
-        log.debug("serviceAddress has been registered: {}", addressPath);
+            log.debug("serviceAddress has been registered: {}", addressPath);
+        }
     }
 
     @Override
@@ -140,7 +131,6 @@ public class ZkConnectManager implements ConnectManager, ServiceRegistry, Servic
         return addressList;
     }
 
-    @Override
     public void stop() {
         if (zookeeper != null) {
             try {

@@ -1,5 +1,6 @@
 package com.alan6.rpc.server.service;
 
+import com.alan6.rpc.server.annotation.RpcService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
  */
 
 @Service
+@RpcService("user")
 public class TestUser implements User {
     @Override
     public String getUserName(long id) {

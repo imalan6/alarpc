@@ -2,13 +2,8 @@ package com.alan6.rpc.server.annotation;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.After;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.annotation.*;
 import org.springframework.stereotype.Component;
-
-import java.lang.annotation.Annotation;
 
 /**
  * @author: Alan6
@@ -23,7 +18,7 @@ public class RpcServiceAnnoAop {
 
     @Pointcut("@annotation(com.alan6.rpc.server.annotation.RpcService)")
     private void pointcut() {
-
+        log.info("pointcut");
     }
 
     @Before("pointcut()")
@@ -38,5 +33,19 @@ public class RpcServiceAnnoAop {
         result.append("["+clsName+"]");
         result.append("["+modName+"]");
         log.info(result.toString());
+    }
+
+    @Around("pointcut()")
+    public void around(JoinPoint joinPoint) {
+
+        log.info("around");
+    }
+
+    // 后置通知
+    @After("pointcut()")
+    public void after() {
+        log.info("====后置通知start");
+
+        log.info("====后置通知end");
     }
 }
