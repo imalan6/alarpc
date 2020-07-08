@@ -11,12 +11,13 @@ spring:
 
 logging:
   level:
-    root: info
+    root: debug
 
 alarpc:
   registry:
     ip: 192.168.33.133
-
-ip: 192.168.33.133
+  threadpool:
+    coreSize: 10
+    maxSize: 60
 
 

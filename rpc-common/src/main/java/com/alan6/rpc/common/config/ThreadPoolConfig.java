@@ -1,16 +1,11 @@
 package com.alan6.rpc.common.config;
 
-import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Component;
-
-import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -20,8 +15,8 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 
 @ConfigurationProperties(prefix = "alarpc.threadpool")
-@EnableAsync
-@Data
+@Configuration
+@Slf4j
 public class ThreadPoolConfig {
 
     @Value("${coreSize:10}")
@@ -39,11 +34,11 @@ public class ThreadPoolConfig {
     @Value("${waitTime:60}")
     private int AwaitTerminationSeconds;
 
-    @Value("${namePrefix:taskExecutor--}")
+    @Value("${namePrefix:alarpc-executor-}")
     private String namePrefix;
 
     @Bean("taskExecutor")
-    public Executor taskExecutro() {
+    public ThreadPoolTaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 
         // 设置核心线程数
@@ -69,6 +64,8 @@ public class ThreadPoolConfig {
 
         // 设置等待终止时间
         taskExecutor.setAwaitTerminationSeconds(AwaitTerminationSeconds);
+
+//        taskExecutor.initialize();
 
         return taskExecutor;
     }

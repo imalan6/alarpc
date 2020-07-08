@@ -54,7 +54,7 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
         }
         return zk;
     }
-
+/*
     public ZooKeeper connectServer(String ip, int timeout) {
         CountDownLatch latch = new CountDownLatch(1);
         ZooKeeper zk = null;
@@ -73,7 +73,7 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
             log.error("Connect zookeeper server error {}", e);
         }
         return zk;
-    }
+    }*/
 
     @Override
     public void watchNode(String path) {
@@ -112,23 +112,28 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
             // 创建 registry 节点（持久）
             if (zookeeper.exists(registryPath, false) == null) {
                 zookeeper.create(registryPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                log.debug("create registry node: {}", registryPath);
+                log.debug("Create registry node: {}", registryPath);
+            }else {
+                log.info("Found registry node: {}", registryPath);
             }
 
             // 创建 service 节点（持久）
             String servicePath = registryPath + "/" + serviceName;
             if (zookeeper.exists(servicePath, false) == null) {
                 zookeeper.create(servicePath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                log.debug("create service node: {}", servicePath);
+                log.debug("Create service node: {}", servicePath);
+            }else {
+                log.info("Found service node: {}", servicePath);
             }
 
             // 创建 address 节点（临时）
             String addressPath = servicePath + "/" + serviceAddress;
             if (zookeeper.exists(addressPath, false) == null) {
                 zookeeper.create(addressPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
-                log.debug("create address node: {}", servicePath);
+                log.debug("Create address node: {}", addressPath);
+            }else {
+                log.info("Found address node: {}", addressPath);
             }
-            log.debug("serviceAddress has been registered: {}", addressPath);
         }
     }
 

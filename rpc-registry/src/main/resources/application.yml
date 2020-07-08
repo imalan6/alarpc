@@ -8,7 +8,3 @@ spring:
 logging:
   level:
     root: info
-
-alarpc:
-  regitstry:
-    ip: 192.168.33.133

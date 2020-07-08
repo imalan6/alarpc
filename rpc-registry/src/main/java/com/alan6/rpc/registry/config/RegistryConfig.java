@@ -25,7 +25,7 @@ public class RegistryConfig {
     @Value("${connect-timeout:1000}")
     private int connTimeOut;
 
-    @Value("${path:/registry}")
+    @Value("${registryPath:/registry}")
     private String registryPath;
 
     @Bean("registryIp")
