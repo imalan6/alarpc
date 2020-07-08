@@ -2,16 +2,13 @@ package com.alan6.rpc.registry.zookeeper;
 
 import com.alan6.rpc.registry.ServiceDiscovery;
 import com.alan6.rpc.registry.ServiceRegistry;
-import com.alan6.rpc.registry.config.RegistryConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * @author: Alan6
@@ -136,6 +133,7 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
         return addressList;
     }
 
+    @Override
     public void stop() {
         if (zookeeper != null) {
             try {

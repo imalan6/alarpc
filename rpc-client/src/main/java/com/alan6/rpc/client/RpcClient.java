@@ -2,7 +2,7 @@ package com.alan6.rpc.client;
 
 import com.alan6.rpc.client.proxy.IAsyncObjectProxy;
 import com.alan6.rpc.client.proxy.ObjectProxy;
-import com.alan6.rpc.registry.zookeeper.ServiceDiscovery;
+import com.alan6.rpc.registry.ServiceDiscovery;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.Proxy;
@@ -43,7 +43,6 @@ public class RpcClient {
     public void stop() {
         threadPoolExecutor.shutdown();
         serviceDiscovery.stop();
-     //   ClientConnectManager.getInstance().stop();
     }
 }
 
