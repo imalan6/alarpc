@@ -23,26 +23,25 @@ import java.util.concurrent.CountDownLatch;
 public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
 
     @Autowired
-    private RegistryConfig config;
+    private String registryIp;
+
+    @Autowired
+    private int connTimeOut;
+
+    @Autowired
+    private String registryPath;
 
     private ZooKeeper zookeeper;
 
-/*    public ZkConnectManager() {
-        if (zookeeper == null) {
-            zookeeper = connectServer(config.getRegistryIp(), config.getConnTimeOut());
-        }
-    }
-
-    public ZkConnectManager(Watcher watcher) {
-        if (zookeeper == null) {
-            zookeeper = connectServer(config.getRegistryIp(), config.getConnTimeOut(), watcher);
-        }
-    }*/
-
     @Override
     public void connectRegistry(Watcher watcher){
+        if (registryIp == null){
+            log.error("Please config registry server ip!!!");
+            return;
+        }
+
         if (zookeeper == null){
-            zookeeper = this.connectServer(config.getRegistryIp(), config.getConnTimeOut(), watcher);
+            zookeeper = this.connectServer(registryIp, connTimeOut, watcher);
         }
     }
 
@@ -51,7 +50,7 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
         try {
             zk = new ZooKeeper(ip, timeout, watcher);
         } catch (Exception e) {
-            log.error("connect zookeeper server error {}", e);
+            log.error("Connect zookeeper server error {}", e);
         }
         return zk;
     }
@@ -69,9 +68,9 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
                 }
             });
             latch.await();
-            log.info("connected zookeeper server");
+            log.info("Connected zookeeper server");
         } catch (IOException | InterruptedException e) {
-            log.error("connect zookeeper server error {}", e);
+            log.error("Connect zookeeper server error {}", e);
         }
         return zk;
     }
@@ -90,9 +89,9 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
                 });
 
                 // registry目录
-                if (path.equals(config.getRegistryPath())) {
+                if (path.equals(registryPath)) {
                     for (String serviceName : dataList) {
-                        String servicePath = config.getRegistryPath() + "/" + serviceName;
+                        String servicePath = registryPath + "/" + serviceName;
                         // 服务递归watch
                         watchNode(servicePath);
                     }
@@ -111,13 +110,13 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
     public void register(String serviceName, String serviceAddress) throws KeeperException, InterruptedException {
         if (zookeeper != null){
             // 创建 registry 节点（持久）
-            if (zookeeper.exists(config.getRegistryPath(), false) == null) {
-                zookeeper.create(config.getRegistryPath(), new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                log.debug("create registry node: {}", config.getRegistryPath());
+            if (zookeeper.exists(registryPath, false) == null) {
+                zookeeper.create(registryPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                log.debug("create registry node: {}", registryPath);
             }
 
             // 创建 service 节点（持久）
-            String servicePath = config.getRegistryPath() + "/" + serviceName;
+            String servicePath = registryPath + "/" + serviceName;
             if (zookeeper.exists(servicePath, false) == null) {
                 zookeeper.create(servicePath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
                 log.debug("create service node: {}", servicePath);
@@ -138,11 +137,11 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
         List<String> addressList = null;
 
         if (zookeeper != null) {
-            String servicePath = config.getRegistryPath() + "/" + serviceName;
+            String servicePath = registryPath + "/" + serviceName;
 
             Stat exist = zookeeper.exists(servicePath, false);
             if (exist == null) {
-                log.error("no service:【{}】 found!", serviceName);
+                log.error("Cannot find rpc service:【{}】 ", serviceName);
                 return null;
             }
 
@@ -158,7 +157,7 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
             try {
                 zookeeper.close();
             } catch (InterruptedException e) {
-                log.error("close zookeeper client error {}", e);
+                log.error("Close zookeeper client error {}", e);
             }
         }
     }

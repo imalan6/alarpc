@@ -3,6 +3,7 @@ package com.alan6.rpc.registry.config;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -11,19 +12,39 @@ import org.springframework.context.annotation.Configuration;
  * @date: 2020/6/22 17:33
  */
 
-@Configuration
+@ConfigurationProperties(prefix = "alarpc.registry")
 @Data
 public class RegistryConfig {
 
-    @Value("${alan6-rpc.registry.ip:127.0.0.1}")
+    @Value("${ip}")
     private String registryIp;
 
-    @Value("${alan6-rpc.registry.session-timeout:5000}")
+    @Value("${session-timeout:5000}")
     private int sessionTimeOut;
 
-    @Value("${alan6-rpc.registry.connect-timeout:1000}")
+    @Value("${connect-timeout:1000}")
     private int connTimeOut;
 
-    @Value("${alan6-rpc.registry.path:/registry}")
+    @Value("${path:/registry}")
     private String registryPath;
+
+    @Bean("registryIp")
+    public String registryIp(){
+        return registryIp;
+    }
+
+    @Bean("sessionTimeOut")
+    public int sessionTimeOut(){
+        return sessionTimeOut;
+    }
+
+    @Bean("connTimeOut")
+    public int connTimeOut(){
+        return connTimeOut;
+    }
+
+    @Bean("registryPath")
+    public String registryPath(){
+        return registryPath;
+    }
 }
