@@ -1,49 +1,73 @@
 package com.alan6.rpc.client;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import com.alan6.rpc.registry.ServiceDiscovery;
+import com.alan6.rpc.registry.ServiceUpdateCallback;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 @Slf4j
 @Component
 public class ClientConnectManager {
-    private volatile static ClientConnectManager connectManage;
 
-    private EventLoopGroup eventLoopGroup = new NioEventLoopGroup(4);
+    @Autowired
+    private ServiceDiscovery serviceDiscovery;
+
+    @Autowired
+    private String registryPath;
 
     private Map<InetSocketAddress, RpcClientHandler> connectedServerNodes = new ConcurrentHashMap<>();
 
-
-    public RpcClientHandler getRpcClientHandler() {
-
-
+    public RpcClientHandler getRpcClientHandler(){
         return null;
     }
 
-    private void connectServerNode(final InetSocketAddress remotePeer) {
-        Bootstrap b = new Bootstrap()
-                .group(eventLoopGroup)
-                .channel(NioSocketChannel.class)
-                .handler(new RpcClientInitializer());
+    @Async("taskExecutor")
+    public void connectRegistry() {
+        {
+            CountDownLatch latch = new CountDownLatch(1);
 
-        ChannelFuture channelFuture = b.connect(remotePeer);
-        channelFuture.addListener(new ChannelFutureListener() {
+            try {
+                serviceDiscovery.connectRegistry(new Watcher() {
+                    @Override
+                    public void process(WatchedEvent event) {
+                        if (event.getState() == Event.KeeperState.SyncConnected) {
+                            log.info("Connect zookeeper server successful!");
+                            latch.countDown();
+                        }
+                    }
+                });
+
+                latch.await();
+            } catch (InterruptedException e) {
+                log.error("{}", e.toString());
+            }
+
+            log.info("========== Starting get rpc service list ===========");
+
+            this.getRpcService();
+        }
+    }
+
+    // 发现、更新服务
+    public void getRpcService() {
+        serviceDiscovery.watchNode("/registry", new ServiceUpdateCallback() {
             @Override
-            public void operationComplete(final ChannelFuture channelFuture) throws Exception {
-                if (channelFuture.isSuccess()) {
-                    log.debug("Successfully connect to remote server. remote peer = " + remotePeer);
-                    RpcClientHandler handler = channelFuture.channel().pipeline().get(RpcClientHandler.class);
+            public void update(String path, List<String> serviceList) {
+                if (serviceList != null && serviceList.size() > 0) {
+                    log.info("【Update】Rpc service:{}, address list：{}", path, serviceList);
                 }
             }
         });
     }
+
 }

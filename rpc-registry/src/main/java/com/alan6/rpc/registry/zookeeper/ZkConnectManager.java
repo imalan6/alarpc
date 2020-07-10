@@ -2,6 +2,7 @@ package com.alan6.rpc.registry.zookeeper;
 
 import com.alan6.rpc.registry.ServiceDiscovery;
 import com.alan6.rpc.registry.ServiceRegistry;
+import com.alan6.rpc.registry.ServiceUpdateCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
@@ -16,8 +17,8 @@ import java.util.List;
  * @date: 2020/6/24 10:06
  */
 @Slf4j
-@Component("zkConnectManager")
-public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
+@Component
+public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry  {
 
     @Autowired
     private String registryIp;
@@ -45,6 +46,7 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
     public ZooKeeper connectServer(String ip, int timeout, Watcher watcher) {
         ZooKeeper zk = null;
         try {
+            log.info("Starting connect zookeeper server.");
             zk = new ZooKeeper(ip, timeout, watcher);
         } catch (Exception e) {
             log.error("Connect zookeeper server error {}", e);
@@ -53,14 +55,14 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
     }
 
     @Override
-    public void watchNode(String path) {
+    public void watchNode(String path, ServiceUpdateCallback callback) {
         if (zookeeper != null){
             try {
                 List<String> dataList = zookeeper.getChildren(path, new Watcher() {
                     @Override
                     public void process(WatchedEvent event) {
                         if (event.getType() == Event.EventType.NodeChildrenChanged) {
-                            watchNode(path);
+                            watchNode(path, callback);
                         }
                     }
                 });
@@ -70,17 +72,16 @@ public class ZkConnectManager implements ServiceRegistry, ServiceDiscovery {
                     for (String serviceName : dataList) {
                         String servicePath = registryPath + "/" + serviceName;
                         // 服务递归watch
-                        watchNode(servicePath);
+                        watchNode(servicePath, callback);
                     }
-                    log.debug("services:{}", dataList);
                 } else { // 服务目录
-                    log.debug("service:{}, addresses: {}", path, dataList);
+//                    log.debug("service:{}, addresses: {}", path, dataList);
+                    callback.update(path, dataList);
                 }
             } catch (KeeperException | InterruptedException e) {
                 log.error("", e);
             }
         }
-
     }
 
     @Override

@@ -47,6 +47,7 @@
             <groupId>com.alan6.rpc</groupId>
             <artifactId>rpc-registry</artifactId>
             <version>1.0.0</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>

@@ -1,1 +1,14 @@
+server:
+  port: 6868
 
+spring:
+  application:
+    name: rpc-client
+
+logging:
+  level:
+    root: debug
+
+alarpc:
+  registry:
+    ip: 192.168.33.133

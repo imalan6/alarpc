@@ -13,7 +13,6 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,7 +24,6 @@ import java.util.concurrent.CountDownLatch;
  * @date: 2020/7/1 14:11
  */
 
-
 @Slf4j
 @Component
 public class RpcServiceAop implements ApplicationListener<ContextRefreshedEvent> {
@@ -33,7 +31,7 @@ public class RpcServiceAop implements ApplicationListener<ContextRefreshedEvent>
     @Autowired
     private InetSocketAddress inetSocketAddress;
 
-    @Resource(name = "zkConnectManager")
+    @Autowired
     private ServiceRegistry serviceRegistry;
 
     private Map<String, Object> serviceBeanMap = new ConcurrentHashMap<>();
