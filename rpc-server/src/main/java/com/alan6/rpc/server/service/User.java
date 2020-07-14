@@ -1,7 +1,5 @@
 package com.alan6.rpc.server.service;
 
-import com.alan6.rpc.server.annotation.RpcService;
-
 /**
  * @author: Alan6
  * @Description:
@@ -9,5 +7,5 @@ import com.alan6.rpc.server.annotation.RpcService;
  */
 
 public interface User {
-    public String getUserName(long id);
+    public String getName(long id);
 }

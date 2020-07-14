@@ -28,7 +28,7 @@ public class ClientConnectManager {
     private Map<InetSocketAddress, RpcClientHandler> connectedServerNodes = new ConcurrentHashMap<>();
 
     public RpcClientHandler getRpcClientHandler(){
-        return null;
+        return new RpcClientHandler();
     }
 
     @Async("taskExecutor")
@@ -62,6 +62,13 @@ public class ClientConnectManager {
     public void getRpcService() {
         serviceDiscovery.watchNode("/registry", new ServiceUpdateCallback() {
             @Override
+            public void get(String path, List<String> serviceList) {
+                if (serviceList != null && serviceList.size() > 0) {
+                    log.info("【Get】Rpc service:{}, address list：{}", path, serviceList);
+                }
+            }
+
+            @Override
             public void update(String path, List<String> serviceList) {
                 if (serviceList != null && serviceList.size() > 0) {
                     log.info("【Update】Rpc service:{}, address list：{}", path, serviceList);
@@ -69,5 +76,4 @@ public class ClientConnectManager {
             }
         });
     }
-
 }

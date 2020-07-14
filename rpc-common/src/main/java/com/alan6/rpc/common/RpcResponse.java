@@ -1,9 +1,15 @@
 package com.alan6.rpc.common;
 
+import lombok.Builder;
+import lombok.Data;
+
 /**
  * RPC Response
  * @author huangyong
  */
+
+@Data
+@Builder
 public class RpcResponse {
     private String requestId;
     private String error;
@@ -11,29 +17,5 @@ public class RpcResponse {
 
     public boolean isError() {
         return error != null;
-    }
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
-    public String getError() {
-        return error;
-    }
-
-    public void setError(String error) {
-        this.error = error;
-    }
-
-    public Object getResult() {
-        return result;
-    }
-
-    public void setResult(Object result) {
-        this.result = result;
     }
 }

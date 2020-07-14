@@ -2,6 +2,8 @@ package com.alan6.rpc.registry;
 
 import org.apache.zookeeper.KeeperException;
 
+import java.util.Map;
+
 /**
  * @author： Alan6
  * @Description：
@@ -11,8 +13,8 @@ public interface ServiceRegistry extends BaseConnectManager {
     /**
      * 注册服务
      *
-     * @param serviceName    服务名称
+     * @param serviceBeanMap    服务bean Map
      * @param serviceAddress 服务地址
      */
-    void register(String serviceName, String serviceAddress) throws KeeperException, InterruptedException;
+    void register(Map<String, Object> serviceBeanMap, String serviceAddress) throws KeeperException, InterruptedException;
 }

@@ -10,11 +10,11 @@ import org.springframework.stereotype.Service;
  */
 
 @Service
-@RpcService("zhangsan")
+@RpcService("user")
 public class UserImpl implements User {
 
     @Override
-    public String getUserName(long id) {
+    public String getName(long id) {
         return "zhangsan" + id;
     }
 }

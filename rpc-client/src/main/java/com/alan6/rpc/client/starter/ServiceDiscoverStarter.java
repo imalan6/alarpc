@@ -20,6 +20,6 @@ public class ServiceDiscoverStarter implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        connectManager.connectRegistry();
+//        connectManager.connectRegistry();
     }
 }

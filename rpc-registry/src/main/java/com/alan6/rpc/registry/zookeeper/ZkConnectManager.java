@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Alan6
@@ -18,7 +19,7 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry  {
+public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry {
 
     @Autowired
     private String registryIp;
@@ -32,13 +33,13 @@ public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry  {
     private static ZooKeeper zookeeper;
 
     @Override
-    public void connectRegistry(Watcher watcher){
-        if (registryIp == null){
+    public void connectRegistry(Watcher watcher) {
+        if (registryIp == null) {
             log.error("Please config registry server ip!!!");
             return;
         }
 
-        if (zookeeper == null){
+        if (zookeeper == null) {
             zookeeper = this.connectServer(registryIp, connTimeOut, watcher);
         }
     }
@@ -56,7 +57,7 @@ public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry  {
 
     @Override
     public void watchNode(String path, ServiceUpdateCallback callback) {
-        if (zookeeper != null){
+        if (zookeeper != null) {
             try {
                 List<String> dataList = zookeeper.getChildren(path, new Watcher() {
                     @Override
@@ -69,13 +70,15 @@ public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry  {
 
                 // registry目录
                 if (path.equals(registryPath)) {
+
+                    callback.get(path, dataList);
+
                     for (String serviceName : dataList) {
                         String servicePath = registryPath + "/" + serviceName;
                         // 服务递归watch
                         watchNode(servicePath, callback);
                     }
                 } else { // 服务目录
-//                    log.debug("service:{}, addresses: {}", path, dataList);
                     callback.update(path, dataList);
                 }
             } catch (KeeperException | InterruptedException e) {
@@ -84,33 +87,60 @@ public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry  {
         }
     }
 
+    /**
+     * 列出指定path下所有节点
+     */
+    public void lsr(String path) throws Exception {
+        if (zookeeper == null){
+            return;
+        }
+        List<String> list = zookeeper.getChildren(path,null);
+        //判断是否有子节点
+        if(list.isEmpty() || list == null){
+            return;
+        }
+
+        for(String s : list){
+            //判断是否为根目录
+            if(path.equals("/")){
+                lsr(path + s);
+            }else {
+                lsr(path +"/" + s);
+            }
+        }
+    }
+
     @Override
-    public void register(String serviceName, String serviceAddress) throws KeeperException, InterruptedException {
-        if (zookeeper != null){
+    public void register(Map<String, Object> serviceBeanMap, String serviceAddress) throws KeeperException, InterruptedException {
+        if (zookeeper != null) {
             // 创建 registry 节点（持久）
             if (zookeeper.exists(registryPath, false) == null) {
                 zookeeper.create(registryPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                log.debug("Create registry node: {}", registryPath);
-            }else {
+                log.info("Create registry node: {}", registryPath);
+            } else {
                 log.info("Found registry node: {}", registryPath);
             }
 
-            // 创建 service 节点（持久）
-            String servicePath = registryPath + "/" + serviceName;
-            if (zookeeper.exists(servicePath, false) == null) {
-                zookeeper.create(servicePath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-                log.debug("Create service node: {}", servicePath);
-            }else {
-                log.info("Found service node: {}", servicePath);
-            }
+            for (String service : serviceBeanMap.keySet()) {
+                // 创建 service 节点（持久）
+                String servicePath = registryPath + "/" + service;
+                if (zookeeper.exists(servicePath, false) == null) {
+                    zookeeper.create(servicePath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                    log.info("Create service node: {}", servicePath);
+                }else {
+                    log.info("Found service node: {}", servicePath);
+                }
 
-            // 创建 address 节点（临时）
-            String addressPath = servicePath + "/" + serviceAddress;
-            if (zookeeper.exists(addressPath, false) == null) {
-                zookeeper.create(addressPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
-                log.debug("Create address node: {}", addressPath);
-            }else {
-                log.info("Found address node: {}", addressPath);
+                // 创建 address 节点（临时）
+                String addressPath = servicePath + "/" + serviceAddress;
+                if (zookeeper.exists(addressPath, false) == null) {
+                    zookeeper.create(addressPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+                    log.info("Create address node: {}", addressPath);
+                }else {
+                   log.info("Found address node: {}", addressPath);
+                }
+                log.info("【Register】Register rpc service success: 【{}】 => 【{}】", service, serviceAddress);
+                log.info("-----------------------------------------");
             }
         }
     }

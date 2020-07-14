@@ -15,7 +15,7 @@ class RpcServerApplicationTests {
 
     @Test
     void contextLoads() {
-        log.info(user.getUserName(1000));
+        log.info(user.getName(1000));
     }
 
 }

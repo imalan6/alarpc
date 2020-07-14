@@ -5,7 +5,6 @@ import com.alan6.rpc.client.RPCFuture;
 import com.alan6.rpc.client.RpcClientHandler;
 import com.alan6.rpc.common.RpcRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -19,8 +18,7 @@ public class ObjectProxy<T> implements InvocationHandler, IAsyncObjectProxy {
 
     private Class<T> clazz;
 
-    @Autowired
-    private ClientConnectManager connectManager;
+    private ClientConnectManager connectManager = new ClientConnectManager();
 
     public ObjectProxy(Class<T> clazz) {
         this.clazz = clazz;
@@ -45,10 +43,11 @@ public class ObjectProxy<T> implements InvocationHandler, IAsyncObjectProxy {
 
         RpcRequest request = new RpcRequest();
         request.setRequestId(UUID.randomUUID().toString());
-        request.setClassName(method.getDeclaringClass().getName());
+        request.setServiceName(method.getDeclaringClass().getName());
         request.setMethodName(method.getName());
         request.setParameterTypes(method.getParameterTypes());
         request.setParameters(args);
+
         // Debug
         log.debug(method.getDeclaringClass().getName());
         log.debug(method.getName());
@@ -75,7 +74,7 @@ public class ObjectProxy<T> implements InvocationHandler, IAsyncObjectProxy {
     private RpcRequest createRequest(String className, String methodName, Object[] args) {
         RpcRequest request = new RpcRequest();
         request.setRequestId(UUID.randomUUID().toString());
-        request.setClassName(className);
+        request.setServiceName(className);
         request.setMethodName(methodName);
         request.setParameters(args);
 
