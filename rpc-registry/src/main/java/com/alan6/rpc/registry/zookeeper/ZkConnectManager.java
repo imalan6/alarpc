@@ -105,6 +105,7 @@ public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry {
             if(path.equals("/")){
                 lsr(path + s);
             }else {
+                log.info("{}", path +"/" + s);
                 lsr(path +"/" + s);
             }
         }
