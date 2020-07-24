@@ -93,12 +93,20 @@ public class RpcClientAop implements ApplicationListener<ContextRefreshedEvent> 
                 serviceDiscovery.watchNode("/registry", new ServiceUpdateCallback() {
                     @Override
                     public void get(String path, List<String> serviceList) {
-                        log.info("Get rpc service list: {}", serviceList);
+                        if (serviceList != null && serviceList.size() > 0) {
+                            log.info("Rpc service list:【{}】", serviceList);
+                        }else {
+                            log.info("No rpc service found:【{}】", path);
+                        }
                     }
 
                     @Override
                     public void update(String path, List<String> serviceList) {
-                        log.info("Update rpc service list: {}", serviceList);
+                        if (serviceList != null && serviceList.size() > 0) {
+                            log.info("Rpc service update:【{}】=>【{}】", path, serviceList);
+                        }else {
+                            log.info("Rpc service offline:【{}】", path);
+                        }
                     }
                 });
             }

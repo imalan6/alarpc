@@ -135,7 +135,7 @@ public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry {
                 // 创建 address 节点（临时）
                 String addressPath = servicePath + "/" + serviceAddress;
                 if (zookeeper.exists(addressPath, false) == null) {
-                    zookeeper.create(addressPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+                    zookeeper.create(addressPath, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
                     log.info("Create address node: {}", addressPath);
                 }else {
                    log.info("Found address node: {}", addressPath);
