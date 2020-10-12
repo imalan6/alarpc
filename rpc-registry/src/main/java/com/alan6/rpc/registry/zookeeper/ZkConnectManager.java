@@ -56,14 +56,18 @@ public class ZkConnectManager implements ServiceDiscovery, ServiceRegistry {
     }
 
     @Override
-    public void watchNode(String path, ServiceUpdateCallback callback) {
+    public void watchNode(String path, ServiceUpdateCallback callback) throws Exception {
         if (zookeeper != null) {
             try {
                 List<String> dataList = zookeeper.getChildren(path, new Watcher() {
                     @Override
                     public void process(WatchedEvent event) {
                         if (event.getType() == Event.EventType.NodeChildrenChanged) {
-                            watchNode(path, callback);
+                            try {
+                                watchNode(path, callback);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 });

@@ -60,20 +60,24 @@ public class ClientConnectManager {
 
     // 发现、更新服务
     public void getRpcService() {
-        serviceDiscovery.watchNode("/registry", new ServiceUpdateCallback() {
-            @Override
-            public void get(String path, List<String> serviceList) {
-                if (serviceList != null && serviceList.size() > 0) {
-                    log.info("【Get】Rpc service:{}, address list：{}", path, serviceList);
+        try {
+            serviceDiscovery.watchNode("/registry", new ServiceUpdateCallback() {
+                @Override
+                public void get(String path, List<String> serviceList) {
+                    if (serviceList != null && serviceList.size() > 0) {
+                        log.info("【Get】Rpc service:{}, address list：{}", path, serviceList);
+                    }
                 }
-            }
 
-            @Override
-            public void update(String path, List<String> serviceList) {
-                if (serviceList != null && serviceList.size() > 0) {
-                    log.info("【Update】Rpc service:{}, address list：{}", path, serviceList);
+                @Override
+                public void update(String path, List<String> serviceList) {
+                    if (serviceList != null && serviceList.size() > 0) {
+                        log.info("【Update】Rpc service:{}, address list：{}", path, serviceList);
+                    }
                 }
-            }
-        });
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

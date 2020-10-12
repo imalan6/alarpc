@@ -1,5 +1,6 @@
 package com.alan6.rpc.client.annotation;
 
+import com.alan6.rpc.client.cache.RpcCacheManager;
 import com.alan6.rpc.registry.ServiceDiscovery;
 import com.alan6.rpc.registry.ServiceUpdateCallback;
 import lombok.extern.slf4j.Slf4j;
@@ -12,8 +13,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -29,7 +28,8 @@ public class RpcClientAop implements ApplicationListener<ContextRefreshedEvent> 
     @Autowired
     private ServiceDiscovery serviceDiscovery;
 
-    private Map<String, Object> serviceBeanMap = new ConcurrentHashMap<>();
+    @Autowired
+    private RpcCacheManager cacheManager;
 
     @Autowired
     private AsynTask task;
@@ -54,62 +54,61 @@ public class RpcClientAop implements ApplicationListener<ContextRefreshedEvent> 
         }*/
 
         // 连接服务注册中心
-        task.connectRegistry();
+        try {
+            task.connectRegistry();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         log.info("Connecting registry server...");
-    }
-
-    public Map<String, Object> getServiceBeanMap() {
-        return this.serviceBeanMap;
     }
 
     @Component
     class AsynTask {
 
         @Async("taskExecutor")
-        public void connectRegistry() {
-            {
-                CountDownLatch latch = new CountDownLatch(1);
-                log.debug("【debug】{}", Thread.currentThread().getName());
+        public void connectRegistry() throws Exception {
+            CountDownLatch latch = new CountDownLatch(1);
+            log.debug("thread name: {}", Thread.currentThread().getName());
 
-                try {
-                    serviceDiscovery.connectRegistry(new Watcher() {
-                        @Override
-                        public void process(WatchedEvent event) {
-                            if (event.getState() == Event.KeeperState.SyncConnected) {
-                                log.info("Connect registry server success!");
-                                latch.countDown();
-                            }
-                        }
-                    });
-                    latch.await();
-                } catch (InterruptedException e) {
-                    log.error("Connect registry server fail");
-                }
-
-                log.info("========== Starting discover rpc service ===========");
-
-                //发现服务
-                serviceDiscovery.watchNode("/registry", new ServiceUpdateCallback() {
+            try {
+                serviceDiscovery.connectRegistry(new Watcher() {
                     @Override
-                    public void get(String path, List<String> serviceList) {
-                        if (serviceList != null && serviceList.size() > 0) {
-                            log.info("Rpc service list:【{}】", serviceList);
-                        }else {
-                            log.info("No rpc service found:【{}】", path);
-                        }
-                    }
-
-                    @Override
-                    public void update(String path, List<String> serviceList) {
-                        if (serviceList != null && serviceList.size() > 0) {
-                            log.info("Rpc service update:【{}】=>【{}】", path, serviceList);
-                        }else {
-                            log.info("Rpc service offline:【{}】", path);
+                    public void process(WatchedEvent event) {
+                        if (event.getState() == Event.KeeperState.SyncConnected) {
+                            log.info("Connect registry server success!");
+                            latch.countDown();
                         }
                     }
                 });
+                latch.await();
+            } catch (InterruptedException e) {
+                log.error("Connect registry server fail");
             }
+
+            log.info("========== Starting discover rpc service ===========");
+
+            //发现服务
+            serviceDiscovery.watchNode("/registry", new ServiceUpdateCallback() {
+                @Override
+                public void get(String path, List<String> serviceList) {
+                    if (serviceList != null && serviceList.size() > 0) {
+                        log.info("Rpc service list:【{}】", serviceList);
+                    } else {
+                        log.info("No rpc service found:【{}】", path);
+                    }
+                }
+
+                @Override
+                public void update(String service, List<String> nodeList) throws Exception {
+                    if (nodeList != null && nodeList.size() > 0) {
+                        log.info("Rpc service update:【{}】=>【{}】", service, nodeList);
+                        cacheManager.set(service, nodeList);
+                    } else {
+                        log.info("Rpc service offline:【{}】", service);
+                    }
+                }
+            });
         }
     }
 }

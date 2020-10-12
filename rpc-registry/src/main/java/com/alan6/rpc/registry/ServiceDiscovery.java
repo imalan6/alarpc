@@ -18,5 +18,5 @@ public interface ServiceDiscovery extends BaseConnectManager {
      */
     public List<String> discover(String serviceName) throws KeeperException, InterruptedException;
 
-    public void watchNode(String path, ServiceUpdateCallback callback);
+    public void watchNode(String path, ServiceUpdateCallback callback) throws Exception;
 }

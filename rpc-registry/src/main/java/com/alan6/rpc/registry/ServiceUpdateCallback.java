@@ -11,5 +11,5 @@ public interface ServiceUpdateCallback {
 
     public void get(String path, List<String> serviceList);
 
-    public void update(String path, List<String> serviceList);
+    public void update(String service, List<String> nodeList) throws Exception;
 }
