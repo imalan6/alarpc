@@ -31,6 +31,7 @@ public class ObjectProxy<T> implements InvocationHandler, IAsyncObjectProxy {
             if ("equals".equals(name)) {
                 return proxy == args[0];
             } else if ("hashCode".equals(name)) {
+                
                 return System.identityHashCode(proxy);
             } else if ("toString".equals(name)) {
                 return proxy.getClass().getName() + "@" +
